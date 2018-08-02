@@ -28,18 +28,21 @@ class NewVisitorTest(unittest.TestCase):
             'Enter a to-do item'
         )
 
+
         # He types "Buy peacock feathers " into a text box
         inputbox.send_keys('Buy peacock feathers')
+
 
         # When he hits enter, teh page updates and how the page lists "1: Buy peacock feathers" as an item in a to-do lists
         inputbox.send_keys(Keys.ENTER)
         time.sleep(1)
 
         table = self.browser.find_element_by_id('id_list_table')
-        rows = table.find_element_by_tag_name('tr')
+        rows = table.find_elements_by_tag_name('tr')
 
         self.assertTrue(
-            any(row.text == '1: Buy peacock feathers' for row in rows)
+            any(row.text == '1: Buy peacock feathers' for row in rows),
+            f"New to-do item didn't appear in table Contents were:\n{table.text}"
         )
 
         # There is still a text box inviting him to add another item. He enters "Use peacock feathers to make a fly"
