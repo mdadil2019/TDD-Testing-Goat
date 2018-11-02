@@ -11,7 +11,7 @@ class NewVisitorTest(LiveServerTestCase):
 
 
     def setUp(self):
-        self.browser = webdriver.Firefox()
+        self.browser = webdriver.Firefox(executable_path = '/Users/mdadil2019/Documents/PythonProjects/geckodriver')
 
     def tearDown(self):
         self.browser.quit()
@@ -96,3 +96,44 @@ class NewVisitorTest(LiveServerTestCase):
 
         # He visited that url - his to do list is still there
         # Satisfied, he goes back to sleep
+
+    def test_multiple_user_can_start_lists_at_different_urls(self):
+        #adil starts a new to do lists
+        self.browser.get(self.live_server_url)
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy peacock features')
+        inputbox.send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table('1: Buy peacock features')
+
+        #He notices that his list has a unique URL
+        adil_list_url = self.browser.current_url
+        self.assertRegex(adil_list_url,'/list/.+')
+
+        #Now a new user, Yasir, comes along to the site
+        ##we use a new broswer session to make sure that no information of adil is coming through cookies
+        self.broswer.quit()
+        self.broswer = webdriver.Firefox()
+
+        #Yasir visited the home page, there is no sign of Adil's lists
+        self.browser.get(self.live_server_url)
+        page_next = self.broswer.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_next)
+        self.assertNotIn('make a fly', page_next)
+
+        #Yasir starts a new list by entering a new item. He is less intesting then Adil
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy laptop')
+        inputbox.send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table('1: Buy laptop')
+
+        #Yasir gets his own unique url
+        yasir_list_url = self.browser.current_url
+        self.assertRegex(yasir_list_url,'/list/.+')
+        self.assertNotEqual(yasir_list_url,adil_list_url)
+
+        # Again, there is no trace of Adil's lists
+        page_text = self.browser.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertIn('Buy laptop', page_text)
+
+        #Satisfactly both of them have been returned
